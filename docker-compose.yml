@@ -1,7 +1,7 @@
 version: '3'
 volumes:
-  datadbpostgres:
-  datadbmysql: 
+  dbpostgresdata:
+  dbmysqldata: 
 networks:
   database:
   web:
@@ -10,7 +10,7 @@ services:
     image: postgres:9.6
     volumes:
       # Volume dos dados
-      - datadbpostgres:/var/lib/postgresql/data
+      - dbpostgresdata:/var/lib/postgresql/data
       # Scripts
       - ./db/postgres/scripts:/scripts
       - ./db/postgres/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -20,7 +20,7 @@ services:
     image: mysql:5.7
     volumes:
       # Volume dos dados
-      - datadbmysql:/var/lib/mysql
+      - dbmysqldata:/var/lib/mysql
       # Scripts
       - ./db/mysql/scripts:/scripts
       - ./db/mysql/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -29,7 +29,7 @@ services:
   balancer:
       image: nginx:1.13
       volumes:
-        # Configuração do balancer
+        # Configuração do balancer (proxy reverso para o frontend)
         - ./balancer/default.config:/etc/nginx/conf.d/default.conf
       ports:
         - 80:80
@@ -42,7 +42,7 @@ services:
       volumes:
         # Site
         - ./web:/usr/share/nginx/html/
-        # Configuração do proxy reverso
+        # Configuração do nginx (responsavel por servir arquivos estaticos e atuar como proxy reverso para o backend)
         - ./nginx/default.config:/etc/nginx/conf.d/default.conf
       expose:
         - 80
@@ -54,7 +54,7 @@ services:
     image: node:8.1
     restart: always
     volumes:
-      # Aplicação
+      # Aplicação Node.js
       - ./app:/app
     working_dir: /app
     command: bash -c "npm install && node bin/www"
